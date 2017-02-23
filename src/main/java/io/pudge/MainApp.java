@@ -39,7 +39,7 @@ public class MainApp {
 
 
 
-    public void generateCacheVideoEndpointMap(){
+    public static void generateCacheVideoEndpointMap(){
 
         for(Request req : requestList){
             int reqAccount = req.getAccount();
@@ -145,6 +145,31 @@ public class MainApp {
         }
     }
 
+    // insert video in cache
+    public static void insertVideoInCache () {
+        for (Cache c : cacheList) {
+            for (Integer vId : cacheVideoEndpointMap.get(c.getId()).keySet())  {
+                if (c.getSize() >= videoList.get(vId).getSize()) {
+                    c.getVideoList().add(videoList.get(vId));
+                    c.setSize(c.getSize()-videoList.get(vId).getSize());
+                    if (c.getSize()==0) {break;}
+                }
+            }
+        }
+    }
+
+    public static void printResult () {
+        // System.out.println(n);
+
+        int n=0;
+
+        for (Cache c : cacheList) {
+            if (c.getVideoList().size()>0 ) {
+                c.printCacheVideoList();
+                n++;
+            }
+        }
+    }
 
 }
 
