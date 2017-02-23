@@ -44,7 +44,6 @@ public class MainApp {
 
         printResult();
 
-
     }
 
 
@@ -231,6 +230,9 @@ public class MainApp {
     // insert video in cache
     public static void insertVideoInCache(Map<Integer, Map<Integer, Double>> videoRatio) {
         for (Cache c : cacheList) {
+            if(!videoRatio.containsKey(c.getId())){
+                System.out.println("null");
+            }
             for (Integer vId : videoRatio.get(c.getId()).keySet()) {
                 if (c.getSize() >= videoList.get(vId).getSize()) {
                     c.getVideoList().add(videoList.get(vId));
@@ -255,6 +257,8 @@ public class MainApp {
                 n++;
             }
         }
+        System.out.println(n);
+
     }
 
 }
