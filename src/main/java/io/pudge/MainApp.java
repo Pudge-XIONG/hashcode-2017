@@ -23,6 +23,7 @@ public class MainApp {
     public static List<Cache> cacheList = new ArrayList<>();
     public static List<Endpoint> endpointList = new ArrayList<>();
     public static List<Video> videoList = new ArrayList<>();
+    public static List<Video> availableVideoList = new ArrayList<>();
     public static List<Request> requestList = new ArrayList<>();
 
     public static Map<Integer, Map<Integer, Map<Integer, Double>>> cacheVideoEndpointMap = new HashMap<>();
@@ -36,6 +37,26 @@ public class MainApp {
 
     }
 
+
+
+    public void generateCacheVideoEndpointMap(){
+
+        for(Request req : requestList){
+            int reqAccount = req.getAccount();
+            Video video = req.getVideo();
+            Endpoint endpoint = req.getEndpoint();
+            for(Cache cache : cacheList){
+
+            }
+        }
+        for(Cache cache : cacheList){
+            for(Video video : videoList){
+                for(Endpoint endPoint : endpointList){
+
+                }
+            }
+        }
+    }
 
 
 
@@ -70,6 +91,9 @@ public class MainApp {
                 video.setId(i);
                 video.setSize(Integer.parseInt(values[i]));
                 videoList.add(video);
+                if(video.getSize() <= CACHE_SIZE){
+                    availableVideoList.add(video);
+                }
             }
 
             int currentEndpointIndex = 0;
@@ -120,8 +144,6 @@ public class MainApp {
             System.out.println("Error while read line : " + e.getMessage());
         }
     }
-
-
 
 
 }
