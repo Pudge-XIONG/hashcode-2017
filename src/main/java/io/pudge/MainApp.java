@@ -146,6 +146,7 @@ public class MainApp {
     }
 
     // insert video in cache
+    /*
     public static void insertVideoInCache () {
         for (Cache c : cacheList) {
             for (Integer vId : cacheVideoEndpointMap.get(c.getId()).keySet())  {
@@ -157,6 +158,22 @@ public class MainApp {
             }
         }
     }
+    */
+
+    // insert video in cache
+    public static void insertVideoInCache (HashMap<Integer, HashMap<Integer,Double>> videoRatio) {
+        for (Cache c : cacheList) {
+            for (Integer vId : videoRatio.get(c.getId()).keySet())  {
+                if (c.getSize() >= videoList.get(vId).getSize()) {
+                    c.getVideoList().add(videoList.get(vId));
+                    c.setSize(c.getSize()-videoList.get(vId).getSize());
+                    if (c.getSize()==0) {break;}
+                }
+            }
+        }
+    }
+
+
 
     public static void printResult () {
         // System.out.println(n);
