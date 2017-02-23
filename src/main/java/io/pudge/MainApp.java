@@ -27,7 +27,7 @@ public class MainApp {
     public static List<Video> availableVideoList = new ArrayList<>();
     public static List<Request> requestList = new ArrayList<>();
 
-    public static final String fileName = "trending_today";
+    public static final String fileName = "kittens";
 
     public static Map<Integer, Map<Integer, Map<Integer, Double>>> cacheVideoEndpointMap = new HashMap<>();
 
@@ -75,7 +75,7 @@ public class MainApp {
                 }
                 videoRatiosumMap.put(videoId,ratioSumPerVideo);
             }
-            sortByValue(videoRatiosumMap);
+            videoRatiosumMap = sortByValue(videoRatiosumMap);
 
             sortedCacheVideoMap.put(cacheId, videoRatiosumMap );
 
@@ -262,7 +262,7 @@ public class MainApp {
                     n++;
                 }
             }
-            writer.println(n);
+            writer.print(n + " ");
             for (Cache c : cacheList) {
                 if (c.getVideoList().size() > 0) {
                     writer.println(c.getId());
