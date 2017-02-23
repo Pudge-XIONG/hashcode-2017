@@ -262,10 +262,10 @@ public class MainApp {
                     n++;
                 }
             }
-            writer.print(n + " ");
+            writer.println(n);
             for (Cache c : cacheList) {
                 if (c.getVideoList().size() > 0) {
-                    writer.println(c.getId());
+                    writer.print(c.getId() + " ");
                     List<Video> c_videoList = c.getVideoList();
                     int videoListSize = c_videoList.size();
                     for(int i = 0; i < videoListSize; i++) {
