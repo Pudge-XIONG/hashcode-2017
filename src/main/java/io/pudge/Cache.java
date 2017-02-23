@@ -45,4 +45,15 @@ public class Cache {
     public void setLatencyToEndpoint(Map<Integer, Integer> latencyToEndpoint) {
         this.latencyToEndpoint = latencyToEndpoint;
     }
+
+    public void printCacheVideoList () {
+        System.out.print(id) ;
+
+        for (Video v : videoList) {
+            System.out.print(' ') ;
+            System.out.print(v.getId());
+        }
+
+        System.out.println();
+    }
 }
