@@ -5,6 +5,7 @@ import org.apache.camel.main.Main;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A Camel Application
@@ -35,33 +36,100 @@ public class MainApp {
 
         loadInput("example.in");
 
+        generateCacheVideoEndpointMap();
+
+        Map<Integer, Map<Integer, Double>> sortedMap = sortVideoByRatio(cacheVideoEndpointMap);
+
+        insertVideoInCache(sortedMap);
+
+        printResult();
+
+
     }
 
 
+    public static Map<Integer, Map<Integer, Double>> sortVideoByRatio(Map<Integer, Map<Integer, Map<Integer, Double>>> cacheVideoEndpointMap) {
 
-    public static void generateCacheVideoEndpointMap(){
 
-        for(Request req : requestList){
+        Map<Integer, Map<Integer, Double>> sortedCacheVideoMap = new HashMap<>();
+
+
+        for ( int cacheId : cacheVideoEndpointMap.keySet()  ) {
+
+
+
+            Set<Integer> videoIdList = cacheVideoEndpointMap.get(cacheId).keySet();
+
+            Map<Integer, Double> videoRatiosumMap = new HashMap<>();
+
+            for ( int videoId : videoIdList ) {
+                // map < EndPoint, Ratio >
+                double ratioSumPerVideo = 0;
+                Set<Integer> EndpointIdList = cacheVideoEndpointMap.get(cacheId).get(videoId).keySet();
+                for (int EndpointId : EndpointIdList) {
+                    ratioSumPerVideo += cacheVideoEndpointMap.get(cacheId).get(videoId).get(EndpointId);
+                }
+                videoRatiosumMap.put(videoId,ratioSumPerVideo);
+            }
+            sortByValue(videoRatiosumMap);
+
+            sortedCacheVideoMap.put(cacheId, videoRatiosumMap );
+
+        }
+
+        return sortedCacheVideoMap;
+
+    }
+
+
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+        return map.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(/*Collections.reverseOrder()*/))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+    }
+
+
+    public static void generateCacheVideoEndpointMap() {
+        for (Request req : requestList) {
             int reqAccount = req.getAccount();
             Video video = req.getVideo();
             Endpoint endpoint = req.getEndpoint();
-            for(Cache cache : cacheList){
-
-            }
-        }
-        for(Cache cache : cacheList){
-            for(Video video : videoList){
-                for(Endpoint endPoint : endpointList){
-
+            if (video.getSize() > CACHE_SIZE) {
+                //Map<Integer, Double> endpointMap = new HashMap<>();
+                // Map<Integer, Map<Integer, Double>> videoEndpointMap = new HashMap<>();
+                for (Cache cache : cacheList) {
+                    int endPointLatencyToCenter = endpoint.getLatencyToCenter();
+                    int endPointLatencyToCache = endpoint.getLatencyToCacheList().get(cache.getId());
+                    int size = video.getSize();
+                    Double value = 1.0 * reqAccount * (endPointLatencyToCenter - endPointLatencyToCache) / (size + 0.0);
+                    Map<Integer, Map<Integer, Double>> videoEndpointMap;
+                    if (cacheVideoEndpointMap.containsKey(cache.getId())) {
+                        videoEndpointMap = cacheVideoEndpointMap.get(cache.getId());
+                    } else {
+                        videoEndpointMap = new HashMap<>();
+                    }
+                    Map<Integer, Double> endpointMap;
+                    if (videoEndpointMap.containsKey(video.getId())) {
+                        endpointMap = videoEndpointMap.get(video.getId());
+                    } else {
+                        endpointMap = new HashMap<>();
+                    }
+                    endpointMap.put(endpoint.getId(), value);
+                    videoEndpointMap.put(video.getId(), endpointMap);
+                    cacheVideoEndpointMap.put(cache.getId(), videoEndpointMap);
                 }
             }
         }
     }
 
 
-
-
-    private static void loadInput(String inputFileName){
+    private static void loadInput(String inputFileName) {
         try {
             InputStream fis = new FileInputStream(inputFileName);
             InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
@@ -76,7 +144,7 @@ public class MainApp {
             CACHE_SIZE = Integer.parseInt(values[4]);
 
             int cacheIndex = 0;
-            while(cacheIndex < CACHE_ACCOUNT){
+            while (cacheIndex < CACHE_ACCOUNT) {
                 Cache cache = new Cache();
                 cache.setId(cacheIndex);
                 cache.setSize(CACHE_SIZE);
@@ -86,18 +154,18 @@ public class MainApp {
 
             currentLine = br.readLine();
             values = currentLine.split(SEPERATOR);
-            for(int i = 0; i < VIDEO_ACCOUNT; i++){
+            for (int i = 0; i < VIDEO_ACCOUNT; i++) {
                 Video video = new Video();
                 video.setId(i);
                 video.setSize(Integer.parseInt(values[i]));
                 videoList.add(video);
-                if(video.getSize() <= CACHE_SIZE){
+                if (video.getSize() <= CACHE_SIZE) {
                     availableVideoList.add(video);
                 }
             }
 
             int currentEndpointIndex = 0;
-            while(currentEndpointIndex < ENDPOINT_ACCOUNT){
+            while (currentEndpointIndex < ENDPOINT_ACCOUNT) {
                 currentLine = br.readLine();
                 values = currentLine.split(SEPERATOR);
                 Endpoint endpoint = new Endpoint();
@@ -105,21 +173,21 @@ public class MainApp {
                 endpoint.setLatencyToCenter(Integer.parseInt(values[0]));
                 int currentCacheIndex = 0;
                 int connectedCacheAccount = Integer.parseInt(values[1]);
-                while(currentCacheIndex < connectedCacheAccount){
+                while (currentCacheIndex < connectedCacheAccount) {
                     currentLine = br.readLine();
                     values = currentLine.split(SEPERATOR);
                     Cache cache = cacheList.get(Integer.parseInt(values[0]));
                     cache.getLatencyToEndpoint().put(endpoint.getId(), Integer.parseInt(values[1]));
-                    currentCacheIndex ++;
+                    currentCacheIndex++;
                     endpoint.getLatencyToCacheList().put(cache.getId(), Integer.parseInt(values[1]));
                 }
-                currentEndpointIndex ++;
+                currentEndpointIndex++;
 
                 endpointList.add(endpoint);
             }
 
             int currentRequestIndex = 0;
-            while(currentRequestIndex < REQ_DESC_ACCOUNT){
+            while (currentRequestIndex < REQ_DESC_ACCOUNT) {
                 currentLine = br.readLine();
                 values = currentLine.split(SEPERATOR);
                 int videoId = Integer.parseInt(values[0]);
@@ -134,12 +202,12 @@ public class MainApp {
 
                 requestList.add(request);
 
-                currentRequestIndex ++;
+                currentRequestIndex++;
             }
 
             System.out.println("read done!!!");
 
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Error while read line : " + e.getMessage());
         }
@@ -161,27 +229,28 @@ public class MainApp {
     */
 
     // insert video in cache
-    public static void insertVideoInCache (HashMap<Integer, HashMap<Integer,Double>> videoRatio) {
+    public static void insertVideoInCache(Map<Integer, Map<Integer, Double>> videoRatio) {
         for (Cache c : cacheList) {
-            for (Integer vId : videoRatio.get(c.getId()).keySet())  {
+            for (Integer vId : videoRatio.get(c.getId()).keySet()) {
                 if (c.getSize() >= videoList.get(vId).getSize()) {
                     c.getVideoList().add(videoList.get(vId));
-                    c.setSize(c.getSize()-videoList.get(vId).getSize());
-                    if (c.getSize()==0) {break;}
+                    c.setSize(c.getSize() - videoList.get(vId).getSize());
+                    if (c.getSize() == 0) {
+                        break;
+                    }
                 }
             }
         }
     }
 
 
-
-    public static void printResult () {
+    public static void printResult() {
         // System.out.println(n);
 
-        int n=0;
+        int n = 0;
 
         for (Cache c : cacheList) {
-            if (c.getVideoList().size()>0 ) {
+            if (c.getVideoList().size() > 0) {
                 c.printCacheVideoList();
                 n++;
             }
