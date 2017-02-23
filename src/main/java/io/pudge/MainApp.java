@@ -4,9 +4,9 @@ import org.apache.camel.main.Main;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * A Camel Application
@@ -15,25 +15,24 @@ public class MainApp {
 
 
     private static final String SEPERATOR = " ";
-    public static int ROW;
-    public static int SLOT_ACCOUNT;
-    public static int UNAVAILABLE_ACCOUNT;
-    public static int POOL_ACCOUNT;
-    public static int SERVER_ACCOUNT;
-    public static int AVERAGE_CAPACITY_PER_ROW;
-    public static int AVERAGE_CAPACITY_PER_POOL;
-    public static int AVERAGE_CAPACITY_PER_ROW_PER_POOL;
-    /*
-    public static List<Slot> slotList = new ArrayList<>();
-    public static List<Slot> unavailableSlotList = new ArrayList<>();
-    public static List<Slot> availableSlotList = new ArrayList<>();
-    public static List<Server> serverList = new ArrayList<>();
-    */
+    public static int VIDEO_ACCOUNT;
+    public static int ENDPOINT_ACCOUNT;
+    public static int REQ_DESC_ACCOUNT;
+    public static int CACHE_ACCOUNT;
+    public static int CACHE_SIZE;
+
+
+    public static List<Cache> cacheList = new ArrayList<>();
+    public static List<Endpoint> endpointList = new ArrayList<>();
+    public static List<Video> videoList = new ArrayList<>();
+    public static List<Request> requestList = new ArrayList<>();
+
     /**
      * A main() so we can easily run these routing rules in our IDE
      */
     public static void main(String... args) throws Exception {
-        Main main = new Main();
+
+        loadInput("example.in");
 
     }
 
@@ -47,55 +46,72 @@ public class MainApp {
 
             String currentLine = br.readLine();
             String[] values = currentLine.split(SEPERATOR);
-            ROW = Integer.parseInt(values[0]);
-            SLOT_ACCOUNT = Integer.parseInt(values[1]);
-            UNAVAILABLE_ACCOUNT = Integer.parseInt(values[2]);
-            POOL_ACCOUNT = Integer.parseInt(values[3]);
-            SERVER_ACCOUNT = Integer.parseInt(values[4]);
+            VIDEO_ACCOUNT = Integer.parseInt(values[0]);
+            ENDPOINT_ACCOUNT = Integer.parseInt(values[1]);
+            REQ_DESC_ACCOUNT = Integer.parseInt(values[2]);
+            CACHE_ACCOUNT = Integer.parseInt(values[3]);
+            CACHE_SIZE = Integer.parseInt(values[4]);
 
-            for(int i = 0; i < ROW; i++){
-                for(int j = 0; j < SLOT_ACCOUNT; j++){
-                    /*
-                    Slot slot = new Slot(i, j);
-                    slot.setId(i * SLOT_ACCOUNT + j);
-                    slot.setAvailable(true);
-                    slotList.add(slot);
-                    availableSlotList.add(slot);
-                    */
+            int cacheIndex = 0;
+            while(cacheIndex < CACHE_ACCOUNT){
+                Cache cache = new Cache();
+                cache.setId(cacheIndex);
+                cache.setSize(CACHE_SIZE);
+                cacheList.add(cache);
+                cacheIndex++;
+            }
+
+            currentLine = br.readLine();
+            values = currentLine.split(SEPERATOR);
+            for(int i = 0; i < VIDEO_ACCOUNT; i++){
+                Video video = new Video();
+                video.setId(i);
+                video.setSize(Integer.parseInt(values[i]));
+                videoList.add(video);
+            }
+
+            int currentEndpointIndex = 0;
+            while(currentEndpointIndex < ENDPOINT_ACCOUNT){
+                currentLine = br.readLine();
+                values = currentLine.split(SEPERATOR);
+                Endpoint endpoint = new Endpoint();
+                endpoint.setId(currentEndpointIndex);
+                endpoint.setLatencyToCenter(Integer.parseInt(values[0]));
+                int currentCacheIndex = 0;
+                int connectedCacheAccount = Integer.parseInt(values[1]);
+                while(currentCacheIndex < connectedCacheAccount){
+                    currentLine = br.readLine();
+                    values = currentLine.split(SEPERATOR);
+                    Cache cache = cacheList.get(Integer.parseInt(values[0]));
+                    cache.getLatencyToEndpoint().put(endpoint.getId(), Integer.parseInt(values[1]));
+                    currentCacheIndex ++;
+                    endpoint.getLatencyToCacheList().put(cache.getId(), Integer.parseInt(values[1]));
                 }
+                currentEndpointIndex ++;
+
+                endpointList.add(endpoint);
             }
 
-            int lineAccount = 0;
-            while(lineAccount < UNAVAILABLE_ACCOUNT){
+            int currentRequestIndex = 0;
+            while(currentRequestIndex < REQ_DESC_ACCOUNT){
                 currentLine = br.readLine();
                 values = currentLine.split(SEPERATOR);
-                int r = Integer.parseInt(values[0]);
-                int c = Integer.parseInt(values[1]);
-                /*
-                Slot slot = slotList.get(r * SLOT_ACCOUNT + c);
-                slot.setAvailable(false);
-                unavailableSlotList.add(slot);
-                availableSlotList.remove(slot);
-                */
-                lineAccount ++;
+                int videoId = Integer.parseInt(values[0]);
+                int endPointId = Integer.parseInt(values[1]);
+                int requestAccount = Integer.parseInt(values[2]);
+
+                Request request = new Request();
+                request.setId(currentRequestIndex);
+                request.setAccount(requestAccount);
+                request.setVideo(videoList.get(videoId));
+                request.setEndpoint(endpointList.get(endPointId));
+
+                requestList.add(request);
+
+                currentRequestIndex ++;
             }
 
-            lineAccount = 0;
-            int totalCapacity = 0;
-            while(lineAccount < SERVER_ACCOUNT){
-                currentLine = br.readLine();
-                values = currentLine.split(SEPERATOR);
-                /*
-                Server server = new Server(Integer.parseInt(values[0]), Integer.parseInt(values[1]));
-                server.setId(lineAccount);
-                serverList.add(server);
-                totalCapacity += server.getCapacity();
-                lineAccount ++;
-                */
-            }
-
-            //Collections.sort(serverList);
-
+            System.out.println("read done!!!");
 
         }catch(IOException e){
             e.printStackTrace();
