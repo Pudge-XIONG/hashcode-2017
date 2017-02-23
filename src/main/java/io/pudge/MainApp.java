@@ -34,7 +34,7 @@ public class MainApp {
      */
     public static void main(String... args) throws Exception {
 
-        loadInput("example.in");
+        loadInput("me_at_the_zoo.in");
 
         generateCacheVideoEndpointMap();
 
@@ -99,29 +99,31 @@ public class MainApp {
             int reqAccount = req.getAccount();
             Video video = req.getVideo();
             Endpoint endpoint = req.getEndpoint();
-            if (video.getSize() > CACHE_SIZE) {
+            if (video.getSize() <= CACHE_SIZE) {
                 //Map<Integer, Double> endpointMap = new HashMap<>();
                 // Map<Integer, Map<Integer, Double>> videoEndpointMap = new HashMap<>();
                 for (Cache cache : cacheList) {
                     int endPointLatencyToCenter = endpoint.getLatencyToCenter();
-                    int endPointLatencyToCache = endpoint.getLatencyToCacheList().get(cache.getId());
-                    int size = video.getSize();
-                    Double value = 1.0 * reqAccount * (endPointLatencyToCenter - endPointLatencyToCache) / (size + 0.0);
-                    Map<Integer, Map<Integer, Double>> videoEndpointMap;
-                    if (cacheVideoEndpointMap.containsKey(cache.getId())) {
-                        videoEndpointMap = cacheVideoEndpointMap.get(cache.getId());
-                    } else {
-                        videoEndpointMap = new HashMap<>();
+                    if(endpoint.getLatencyToCacheList().containsKey(cache.getId())){
+                        int endPointLatencyToCache = endpoint.getLatencyToCacheList().get(cache.getId());
+                        int size = video.getSize();
+                        Double value = 1.0 * reqAccount * (endPointLatencyToCenter - endPointLatencyToCache) / (size + 0.0);
+                        Map<Integer, Map<Integer, Double>> videoEndpointMap;
+                        if (cacheVideoEndpointMap.containsKey(cache.getId())) {
+                            videoEndpointMap = cacheVideoEndpointMap.get(cache.getId());
+                        } else {
+                            videoEndpointMap = new HashMap<>();
+                        }
+                        Map<Integer, Double> endpointMap;
+                        if (videoEndpointMap.containsKey(video.getId())) {
+                            endpointMap = videoEndpointMap.get(video.getId());
+                        } else {
+                            endpointMap = new HashMap<>();
+                        }
+                        endpointMap.put(endpoint.getId(), value);
+                        videoEndpointMap.put(video.getId(), endpointMap);
+                        cacheVideoEndpointMap.put(cache.getId(), videoEndpointMap);
                     }
-                    Map<Integer, Double> endpointMap;
-                    if (videoEndpointMap.containsKey(video.getId())) {
-                        endpointMap = videoEndpointMap.get(video.getId());
-                    } else {
-                        endpointMap = new HashMap<>();
-                    }
-                    endpointMap.put(endpoint.getId(), value);
-                    videoEndpointMap.put(video.getId(), endpointMap);
-                    cacheVideoEndpointMap.put(cache.getId(), videoEndpointMap);
                 }
             }
         }
