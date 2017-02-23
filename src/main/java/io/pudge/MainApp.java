@@ -27,6 +27,8 @@ public class MainApp {
     public static List<Video> availableVideoList = new ArrayList<>();
     public static List<Request> requestList = new ArrayList<>();
 
+    public static final String fileName = "me_at_the_zoo";
+
     public static Map<Integer, Map<Integer, Map<Integer, Double>>> cacheVideoEndpointMap = new HashMap<>();
 
     /**
@@ -34,7 +36,8 @@ public class MainApp {
      */
     public static void main(String... args) throws Exception {
 
-        loadInput("me_at_the_zoo.in");
+
+        loadInput( fileName + ".in");
 
         generateCacheVideoEndpointMap();
 
@@ -43,6 +46,8 @@ public class MainApp {
         insertVideoInCache(sortedMap);
 
         printResult();
+
+        printResultToFile();
 
     }
 
@@ -232,9 +237,6 @@ public class MainApp {
     // insert video in cache
     public static void insertVideoInCache(Map<Integer, Map<Integer, Double>> videoRatio) {
         for (Cache c : cacheList) {
-            if(!videoRatio.containsKey(c.getId())){
-                System.out.println("null");
-            }
             for (Integer vId : videoRatio.get(c.getId()).keySet()) {
                 if (c.getSize() >= videoList.get(vId).getSize()) {
                     c.getVideoList().add(videoList.get(vId));
@@ -244,6 +246,42 @@ public class MainApp {
                     }
                 }
             }
+        }
+    }
+
+
+    public static void printResultToFile(){
+        try{
+            PrintWriter writer = new PrintWriter("result/" + fileName + ".out", "UTF-8");
+
+            int n = 0;
+
+            for (Cache c : cacheList) {
+                if (c.getVideoList().size() > 0) {
+                    c.printCacheVideoList();
+                    n++;
+                }
+            }
+            writer.println(n);
+            for (Cache c : cacheList) {
+                if (c.getVideoList().size() > 0) {
+                    writer.println(c.getId());
+                    List<Video> c_videoList = c.getVideoList();
+                    int videoListSize = c_videoList.size();
+                    for(int i = 0; i < videoListSize; i++) {
+                        Video v = c_videoList.get(i);
+                        writer.print(v.getId());
+                        if( i < videoListSize - 1) {
+                            writer.print(' ');
+                        }
+                    }
+                    writer.println();
+                    n++;
+                }
+            }
+            writer.close();
+        } catch (IOException e) {
+            // do something
         }
     }
 
