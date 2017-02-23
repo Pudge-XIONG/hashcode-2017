@@ -4,9 +4,7 @@ import org.apache.camel.main.Main;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
 /**
  * A Camel Application
@@ -27,6 +25,8 @@ public class MainApp {
     public static List<Video> videoList = new ArrayList<>();
     public static List<Request> requestList = new ArrayList<>();
 
+    public static Map<Integer, Map<Integer, Map<Integer, Double>>> cacheVideoEndpointMap = new HashMap<>();
+
     /**
      * A main() so we can easily run these routing rules in our IDE
      */
@@ -35,6 +35,8 @@ public class MainApp {
         loadInput("example.in");
 
     }
+
+
 
 
 
@@ -118,6 +120,8 @@ public class MainApp {
             System.out.println("Error while read line : " + e.getMessage());
         }
     }
+
+
 
 
 }
