@@ -27,7 +27,7 @@ public class MainApp {
     public static List<Video> availableVideoList = new ArrayList<>();
     public static List<Request> requestList = new ArrayList<>();
 
-    public static final String fileName = "me_at_the_zoo";
+    public static final String fileName = "trending_today";
 
     public static Map<Integer, Map<Integer, Map<Integer, Double>>> cacheVideoEndpointMap = new HashMap<>();
 
@@ -89,7 +89,7 @@ public class MainApp {
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         return map.entrySet()
                 .stream()
-                .sorted(Map.Entry.comparingByValue(/*Collections.reverseOrder()*/))
+                .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
