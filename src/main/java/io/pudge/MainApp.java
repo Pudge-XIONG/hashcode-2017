@@ -31,6 +31,8 @@ public class MainApp {
 
     public static Map<Integer, Map<Integer, Map<Integer, Double>>> cacheVideoEndpointMap = new HashMap<>();
 
+    public static Map<Integer, Map<Integer, Double>> cacheVideoRatioMap = new HashMap<>();
+
     /**
      * A main() so we can easily run these routing rules in our IDE
      */
@@ -39,15 +41,43 @@ public class MainApp {
 
         loadInput( fileName + ".in");
 
-        generateCacheVideoEndpointMap();
+        //generateCacheVideoEndpointMap();
+        generateCacheVideoRatioMap();
 
-        Map<Integer, Map<Integer, Double>> sortedMap = sortVideoByRatio(cacheVideoEndpointMap);
+        Map<Integer, Map<Integer, Double>> sortedMap = sortVideoByRatio1(cacheVideoRatioMap);
 
         insertVideoInCache(sortedMap);
 
         printResult();
 
         printResultToFile();
+
+    }
+
+
+
+    public static Map<Integer, Map<Integer, Double>> sortVideoByRatio1(Map<Integer, Map<Integer, Double>> cacheVideoRatioMap) {
+
+
+        Map<Integer, Map<Integer, Double>> sortedCacheVideoMap = new HashMap<>();
+
+
+        for ( int cacheId : cacheVideoRatioMap.keySet()  ) {
+
+            Set<Integer> videoIdList = cacheVideoRatioMap.get(cacheId).keySet();
+
+            Map<Integer, Double> videoRatiosumMap = new HashMap<>();
+
+            for ( int videoId : videoIdList ) {
+                // map < EndPoint, Ratio >
+                double ratioSumPerVideo = cacheVideoRatioMap.get(cacheId).get(videoId);
+                videoRatiosumMap.put(videoId,ratioSumPerVideo);
+            }
+            videoRatiosumMap = sortByValue(videoRatiosumMap);
+            sortedCacheVideoMap.put(cacheId, videoRatiosumMap );
+        }
+
+        return sortedCacheVideoMap;
 
     }
 
@@ -59,8 +89,6 @@ public class MainApp {
 
 
         for ( int cacheId : cacheVideoEndpointMap.keySet()  ) {
-
-
 
             Set<Integer> videoIdList = cacheVideoEndpointMap.get(cacheId).keySet();
 
@@ -99,7 +127,42 @@ public class MainApp {
     }
 
 
+    public static void generateCacheVideoRatioMap() {
+        long totalAccount = 0;
+        for (Request req : requestList) {
+            int reqAccount = req.getAccount();
+            Video video = req.getVideo();
+            Endpoint endpoint = req.getEndpoint();
+            if (video.getSize() <= CACHE_SIZE) {
+                for (Cache cache : cacheList) {
+                    int endPointLatencyToCenter = endpoint.getLatencyToCenter();
+                    if(endpoint.getLatencyToCacheList().containsKey(cache.getId())){
+                        int endPointLatencyToCache = endpoint.getLatencyToCacheList().get(cache.getId());
+                        int size = video.getSize();
+                        Double value = 1.0 * reqAccount * (endPointLatencyToCenter - endPointLatencyToCache) / (size + 0.0)/(size + 0.0)/(size + 0.0);
+                        Map<Integer, Double> videoRatioMap;
+                        if (cacheVideoRatioMap.containsKey(cache.getId())) {
+                            videoRatioMap = cacheVideoRatioMap.get(cache.getId());
+                        } else {
+                            videoRatioMap = new HashMap<>();
+                            videoRatioMap.put(video.getId(), 0.0);
+                        }
+                        if(!videoRatioMap.containsKey(video.getId())){
+                            videoRatioMap.put(video.getId(), value);
+                        }
+                        videoRatioMap.put(video.getId(), videoRatioMap.get(video.getId()) + value);
+                        cacheVideoRatioMap.put(cache.getId(), videoRatioMap);
+                        //totalAccount ++;
+                        //System.out.println(totalAccount);
+                    }
+                }
+            }
+        }
+    }
+
+
     public static void generateCacheVideoEndpointMap() {
+        long totalAccount = 0;
         for (Request req : requestList) {
             int reqAccount = req.getAccount();
             Video video = req.getVideo();
@@ -128,6 +191,8 @@ public class MainApp {
                         endpointMap.put(endpoint.getId(), value);
                         videoEndpointMap.put(video.getId(), endpointMap);
                         cacheVideoEndpointMap.put(cache.getId(), videoEndpointMap);
+                        totalAccount ++;
+                        System.out.println(totalAccount);
                     }
                 }
             }
